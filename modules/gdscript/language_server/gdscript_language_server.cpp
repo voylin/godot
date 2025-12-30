@@ -46,6 +46,11 @@ GDScriptLanguageServer::GDScriptLanguageServer() {
 	_EDITOR_DEF("network/language_server/use_thread", use_thread);
 	_EDITOR_DEF("network/language_server/poll_limit_usec", poll_limit_usec);
 
+	List<String> args = OS::get_singleton()->get_cmdline_args();
+	if (args.find("--lsp-stdio")) {
+		use_stdio = true;
+	}
+
 	set_process_internal(true);
 }
 
@@ -61,7 +66,7 @@ void GDScriptLanguageServer::_notification(int p_what) {
 				start();
 			}
 
-			if (started && !use_thread) {
+			if (started && (!use_thread || use_stdio)) {
 				protocol.poll(poll_limit_usec);
 			}
 		} break;
@@ -94,6 +99,15 @@ void GDScriptLanguageServer::thread_main(void *p_userdata) {
 }
 
 void GDScriptLanguageServer::start() {
+	if (use_stdio) {
+		if (protocol.start(0, IPAddress(), true) == OK) {
+			EditorNode::get_log()->add_message("--- GDSCript language server started in Stdio mode ---", EditorLog::MSG_TYPE_EDITOR);
+			set_process_internal(true);
+			started = true;
+		}
+		return;
+	}
+
 	host = String(_EDITOR_GET("network/language_server/remote_host"));
 	port = (GDScriptLanguageServer::port_override > -1) ? GDScriptLanguageServer::port_override : (int)_EDITOR_GET("network/language_server/remote_port");
 	use_thread = (bool)_EDITOR_GET("network/language_server/use_thread");

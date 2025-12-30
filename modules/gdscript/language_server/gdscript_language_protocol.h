@@ -34,6 +34,7 @@
 #include "gdscript_workspace.h"
 
 #include "core/io/stream_peer_tcp.h"
+#include "core/io/stream_peer_stdio.h"
 #include "core/io/tcp_server.h"
 
 #include "modules/jsonrpc/jsonrpc.h"
@@ -52,7 +53,7 @@ class GDScriptLanguageProtocol : public JSONRPC {
 
 private:
 	struct LSPeer : RefCounted {
-		Ref<StreamPeerTCP> connection;
+		Ref<StreamPeer> connection;
 
 		uint8_t req_buf[LSP_MAX_BUFFER_SIZE];
 		int req_pos = 0;
@@ -98,6 +99,8 @@ private:
 
 	int next_server_id = 0;
 
+	bool use_stdio = false;
+
 	Ref<GDScriptTextDocument> text_document;
 	Ref<GDScriptWorkspace> workspace;
 
@@ -122,7 +125,7 @@ public:
 	_FORCE_INLINE_ bool is_initialized() const { return _initialized; }
 
 	void poll(int p_limit_usec);
-	Error start(int p_port, const IPAddress &p_bind_ip);
+	Error start(int p_port, const IPAddress &p_bind_ip, bool p_use_stdio = false);
 	void stop();
 
 	void notify_client(const String &p_method, const Variant &p_params = Variant(), int p_client_id = -1);
