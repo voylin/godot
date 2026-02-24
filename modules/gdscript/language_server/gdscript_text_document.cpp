@@ -300,6 +300,7 @@ Dictionary GDScriptTextDocument::resolve(const Dictionary &p_params) {
 
 	if (symbol) {
 		item.documentation = symbol->render();
+		item.detail = symbol->detail;
 	}
 
 	if (item.kind == LSP::CompletionItemKind::Event) {
